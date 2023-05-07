@@ -1,14 +1,27 @@
 #include <iostream>
 #include <chrono>
 #include <random>
+#include <vector>
+#include <thread>
 
 using namespace std;
 using namespace chrono;
 
+void matrixVectorMult(int **matrix, int *vectorArray, int n, int start, int end) {
+    for (int i = start; i < end; i++) {
+        int sum = 0;
+        for (int j = 0; j < n; j++) {
+            sum += matrix[i][j] * vectorArray[j];
+        }
+        vectorArray[i] = sum;
+    }
+}
+
 int main() {
     const int n = 10000;
-    int **matrix = new int*[n];
-    int *vector = new int[n];
+    const int THREAD_COUNT = 8;
+    int **matrix = new int *[n];
+    int *vectorArray = new int[n];
     for (int i = 0; i < n; i++) {
         matrix[i] = new int[n];
     }
@@ -17,7 +30,7 @@ int main() {
     mt19937 gen(rd());
     uniform_int_distribution<> dis(0, 9);
     for (int i = 0; i < n; i++) {
-        vector[i] = dis(gen);
+        vectorArray[i] = dis(gen);
         for (int j = 0; j < n; j++) {
             matrix[i][j] = dis(gen);
         }
@@ -33,17 +46,28 @@ int main() {
 
     cout << "Vector:" << endl;
     for (int i = 0; i < n; i++) {
-        cout << vector[i] << " ";
+        cout << vectorArray[i] << " ";
     }
     cout << endl;
 
+    vector<thread> threads;
+    int step = n / THREAD_COUNT;
+    for (int i = 0; i < THREAD_COUNT; i++) {
+        int start = i * step;
+        int end = (i == THREAD_COUNT - 1) ? n : (i + 1) * step;
+        threads.emplace_back(matrixVectorMult, matrix, vectorArray, n, start, end);
+    }
+
     auto start = high_resolution_clock::now();
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            vector[i] += matrix[i][j];
-        }
+    for (auto &thread: threads) {
+        thread.join();
     }
+    cout << "Result:" << endl;
+    for (int i = 0; i < n; i++) {
+        cout << vectorArray[i] << " ";
+    }
+    cout << endl;
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -53,7 +77,7 @@ int main() {
         delete[] matrix[i];
     }
     delete[] matrix;
-    delete[] vector;
+    delete[] vectorArray;
 
     return 0;
 }
