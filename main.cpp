@@ -19,7 +19,13 @@ void matrixVectorMult(int **matrix, int *vectorArray, int n, int start, int end)
 
 int main() {
     const int n = 10000;
-    const int THREAD_COUNT = 8;
+    //const int THREAD_COUNT = 6;
+    //const int THREAD_COUNT = thread::hardware_concurrency() / 2;
+    const int THREAD_COUNT = thread::hardware_concurrency();
+    //const int THREAD_COUNT = thread::hardware_concurrency() * 2;
+    //const int THREAD_COUNT = thread::hardware_concurrency() * 4;
+    //const int THREAD_COUNT = thread::hardware_concurrency() * 8;
+    //const int THREAD_COUNT = thread::hardware_concurrency() * 16;
     int **matrix = new int *[n];
     int *vectorArray = new int[n];
     for (int i = 0; i < n; i++) {
